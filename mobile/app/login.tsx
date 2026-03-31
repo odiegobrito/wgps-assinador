@@ -1,24 +1,28 @@
 import { useEffect, useState } from "react";
 import {
-  View,
   Image,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
+  View,
 } from "react-native";
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
-  withTiming,
+  useSharedValue,
   withSpring,
+  withTiming,
 } from "react-native-reanimated";
+
+import { Ionicons } from "@expo/vector-icons";
+import styles from "./styles/login.style"
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [focusEmail, setFocusEmail] = useState(false);
   const [focusSenha, setFocusSenha] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   // animações principais
   const opacity = useSharedValue(0);
@@ -36,24 +40,37 @@ export default function Login() {
 
   const animatedCard = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
+    transform: [{ translateY: translateY.value }, { scale: scale.value }],
   }));
 
   const animatedButton = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
   }));
 
-  const handleLogin = () => {
-    console.log("Email:", email);
-    console.log("Senha:", senha);
+  const handleLogin = async () => {
+    try {
+      const res = await fetch("http://192.168.1.79:3000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password: senha }),
+      });
+
+      const data = await res.json();
+      console.log("Resposta do backend:", data);
+
+      if (data.token) {
+        alert("Login realizado com sucesso!");
+        // Salvar token e navegar para próxima tela
+      } else {
+        alert("Erro: " + (data.error || "Algo deu errado"));
+      }
+    } catch (err) {
+      console.log("Erro login:", err);
+    }
   };
 
   return (
     <View style={styles.container}>
-      
       {/* Logo */}
       <Image
         source={require("../assets/images/logoprincipal.png")}
@@ -61,38 +78,45 @@ export default function Login() {
       />
 
       <Animated.View style={[styles.card, animatedCard]}>
-
         <Text style={styles.title}>Bem-vindo</Text>
-        <Text style={styles.subtitle}>Entre para continuar</Text>
+        <Text style={styles.subtitle}>Assinador Online</Text>
 
         {/* Email */}
-        <TextInput
-          placeholder="Email"
-          placeholderTextColor="#777"
-          style={[
-            styles.input,
-            focusEmail && styles.inputFocus,
-          ]}
-          value={email}
-          onChangeText={setEmail}
-          onFocus={() => setFocusEmail(true)}
-          onBlur={() => setFocusEmail(false)}
-        />
+    <View style={[styles.inputContainer, focusEmail && styles.inputFocus]}>
+      <TextInput
+        placeholder="Email"
+        placeholderTextColor="#777"
+        style={styles.inputField}
+        value={email}
+        onChangeText={setEmail}
+        onFocus={() => setFocusEmail(true)}
+        onBlur={() => setFocusEmail(false)}
+      />
+    </View>
 
         {/* Senha */}
-        <TextInput
-          placeholder="Senha"
-          placeholderTextColor="#777"
-          secureTextEntry
-          style={[
-            styles.input,
-            focusSenha && styles.inputFocus,
-          ]}
-          value={senha}
-          onChangeText={setSenha}
-          onFocus={() => setFocusSenha(true)}
-          onBlur={() => setFocusSenha(false)}
-        />
+        <View style={[styles.inputContainer, focusSenha && styles.inputFocus]}>
+          <TextInput
+            placeholder="Senha"
+            placeholderTextColor="#777"
+            secureTextEntry={!mostrarSenha}
+            style={styles.inputField}
+            value={senha}
+            onChangeText={setSenha}
+            onFocus={() => setFocusSenha(true)}
+            onBlur={() => setFocusSenha(false)}
+          />
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={() => setMostrarSenha(!mostrarSenha)}
+          >
+            <Ionicons
+              name={mostrarSenha ? "eye" : "eye-off"}
+              size={24}
+              color="#777"
+            />
+          </TouchableOpacity>
+        </View>
 
         {/* Botão */}
         <Animated.View style={animatedButton}>
@@ -106,85 +130,8 @@ export default function Login() {
             <Text style={styles.buttonText}>Entrar</Text>
           </TouchableOpacity>
         </Animated.View>
-
       </Animated.View>
-
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#0a0a0a",
-  },
-
-  logo: {
-    width: 200,
-    height: 200,
-    alignSelf: "center",
-    marginBottom: 25,
-    resizeMode: "contain",
-  },
-
-  card: {
-    backgroundColor: "#121212",
-    padding: 22,
-    borderRadius: 20,
-
-    elevation: 10,
-
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    shadowOffset: { width: 0, height: 10 },
-  },
-
-  title: {
-    fontSize: 26,
-    marginBottom: 5,
-    textAlign: "center",
-    color: "#fff",
-    fontWeight: "bold",
-  },
-
-  subtitle: {
-    fontSize: 14,
-    marginBottom: 20,
-    textAlign: "center",
-    color: "#aaa",
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: "#333",
-    padding: 14,
-    marginBottom: 15,
-    borderRadius: 12,
-    backgroundColor: "#1a1a1a",
-    color: "#fff",
-  },
-
-  inputFocus: {
-    borderColor: "#2662c9",
-    shadowColor: "#2662c9",
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-  },
-
-  button: {
-    backgroundColor: "#2662c9",
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 10,
-  },
-
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-});
