@@ -1,23 +1,49 @@
 import { useEffect, useState } from "react";
-import { View, Image, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
+import {
+  View,
+  Image,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+} from "react-native-reanimated";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [focusEmail, setFocusEmail] = useState(false);
+  const [focusSenha, setFocusSenha] = useState(false);
 
-  // animação
+  // animações principais
   const opacity = useSharedValue(0);
-  const translateY = useSharedValue(50);
+  const translateY = useSharedValue(80);
+  const scale = useSharedValue(0.9);
+
+  // botão
+  const buttonScale = useSharedValue(1);
 
   useEffect(() => {
     opacity.value = withTiming(1, { duration: 800 });
-    translateY.value = withTiming(0, { duration: 800 });
-  }, [opacity, translateY]);
+    translateY.value = withSpring(0);
+    scale.value = withSpring(1);
+  }, []);
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const animatedCard = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
+    transform: [
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
+
+  const animatedButton = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
   }));
 
   const handleLogin = () => {
@@ -29,36 +55,57 @@ export default function Login() {
     <View style={styles.container}>
       
       {/* Logo */}
-      <Image 
-        source={require("../assets/images/logoprincipal.png")} 
-        style={styles.logo} 
+      <Image
+        source={require("../assets/images/logoprincipal.png")}
+        style={styles.logo}
       />
 
-      {/* Card animado */}
-      <Animated.View style={[styles.card, animatedStyle]}>
+      <Animated.View style={[styles.card, animatedCard]}>
 
-        <Text style={styles.title}>Login</Text>
+        <Text style={styles.title}>Bem-vindo</Text>
+        <Text style={styles.subtitle}>Entre para continuar</Text>
 
+        {/* Email */}
         <TextInput
           placeholder="Email"
-          placeholderTextColor="#999"
-          style={styles.input}
+          placeholderTextColor="#777"
+          style={[
+            styles.input,
+            focusEmail && styles.inputFocus,
+          ]}
           value={email}
           onChangeText={setEmail}
+          onFocus={() => setFocusEmail(true)}
+          onBlur={() => setFocusEmail(false)}
         />
 
+        {/* Senha */}
         <TextInput
           placeholder="Senha"
-          placeholderTextColor="#999"
+          placeholderTextColor="#777"
           secureTextEntry
-          style={styles.input}
+          style={[
+            styles.input,
+            focusSenha && styles.inputFocus,
+          ]}
           value={senha}
           onChangeText={setSenha}
+          onFocus={() => setFocusSenha(true)}
+          onBlur={() => setFocusSenha(false)}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Entrar</Text>
-        </TouchableOpacity>
+        {/* Botão */}
+        <Animated.View style={animatedButton}>
+          <TouchableOpacity
+            style={styles.button}
+            activeOpacity={0.8}
+            onPressIn={() => (buttonScale.value = withSpring(0.95))}
+            onPressOut={() => (buttonScale.value = withSpring(1))}
+            onPress={handleLogin}
+          >
+            <Text style={styles.buttonText}>Entrar</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
       </Animated.View>
 
@@ -71,58 +118,73 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#010101",
+    backgroundColor: "#0a0a0a",
   },
 
   logo: {
-    width: 100, 
-    height: 100,
+    width: 200,
+    height: 200,
     alignSelf: "center",
-    marginBottom: 20,
+    marginBottom: 25,
     resizeMode: "contain",
   },
 
   card: {
-    backgroundColor: "#fff",
-    padding: 20,
+    backgroundColor: "#121212",
+    padding: 22,
     borderRadius: 20,
 
-    // Android
-    elevation: 8,
+    elevation: 10,
 
-    // iOS
     shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 10 },
   },
 
   title: {
-    fontSize: 24,
+    fontSize: 26,
+    marginBottom: 5,
+    textAlign: "center",
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
+  subtitle: {
+    fontSize: 14,
     marginBottom: 20,
     textAlign: "center",
-    color: "#000",
-    fontWeight: "bold",
+    color: "#aaa",
   },
 
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    padding: 12,
+    borderColor: "#333",
+    padding: 14,
     marginBottom: 15,
-    borderRadius: 15,
-    backgroundColor: "#FFF",
+    borderRadius: 12,
+    backgroundColor: "#1a1a1a",
+    color: "#fff",
+  },
+
+  inputFocus: {
+    borderColor: "#2662c9",
+    shadowColor: "#2662c9",
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
   },
 
   button: {
     backgroundColor: "#2662c9",
-    padding: 15,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 10,
   },
 
   buttonText: {
     color: "#fff",
     textAlign: "center",
     fontWeight: "bold",
+    fontSize: 16,
   },
 });
