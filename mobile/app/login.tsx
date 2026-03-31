@@ -64,7 +64,7 @@ export default function Login({ navigation }) {
         <Text style={styles.subtitle}>Assinador Online</Text>
 
         {/* Email */}
-        <View style={[styles.inputContainer, focused === "email" ? styles.inputFocus : null, ]}>
+        <View style={[styles.inputContainer, styles.inputFocus, ]}>
           <TextInput
             placeholder="Email"
             placeholderTextColor="#777"
@@ -74,13 +74,12 @@ export default function Login({ navigation }) {
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
-            onBlur={() => setFocused(null)}
-            onFocus={() => setFocused("email")}
+            
           />
         </View>
 
         {/* Senha */}
-        <View style={[styles.inputContainer, focused === "senha" ? styles.inputFocus : null,]}>
+        <View style={[styles.inputContainer, styles.inputFocus,]}>
           <TextInput
             placeholder="Senha"
             placeholderTextColor="#777"
@@ -88,9 +87,7 @@ export default function Login({ navigation }) {
             style={styles.inputField}
             value={senha}
             onChangeText={setSenha}
-            onBlur={() => setFocused(null)}
-            onFocus={() => setFocused("senha")}
-
+            
             
           />
 
