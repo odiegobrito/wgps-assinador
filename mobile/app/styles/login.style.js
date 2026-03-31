@@ -6,6 +6,7 @@ export default StyleSheet.create({
     justifyContent: "center",
     padding: 20,
     backgroundColor: "#010101",
+    zIndex: 0,
   },
 
   logo: {
@@ -25,6 +26,7 @@ export default StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 15,
     shadowOffset: { width: 0, height: 10 },
+    zIndex: 1,
   },
 
   title: {
@@ -63,8 +65,9 @@ export default StyleSheet.create({
   inputFocus: {
     borderColor: "#2662c9",
     shadowColor: "#2662c9",
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 5,
   },
 
   eyeButton: {
