@@ -1,5 +1,10 @@
 import { Stack } from "expo-router";
+import { ContractProvider } from "./context/ContractContext"; // caminho correto pro seu contexto
 
 export default function Layout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <ContractProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </ContractProvider>
+  );
 }
