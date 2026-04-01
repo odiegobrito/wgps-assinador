@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Text,
@@ -9,62 +10,75 @@ import {
   View,
 } from "react-native";
 
+import { useRouter } from "expo-router";
 import styles from "./styles/login.style";
 
 const BACKEND_URL = "http://192.168.1.79:3000";
 
-export default function Login({ navigation }) {
+export default function Login() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [focused, setFocused] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !senha) {
+    if (!email.trim() || !senha.trim()) {
       return Alert.alert("Erro", "Preencha email e senha");
     }
 
+    setLoading(true);
+
     try {
-      const res = await fetch(`${BACKEND_URL}/login`, {
+      const response = await fetch(`${BACKEND_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: senha }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password: senha,
+        }),
       });
 
-      const data = await res.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (res.status === 200 && data.token) {
-        Alert.alert("Sucesso", "Login realizado!", [
-          {
-            text: "OK",
-            onPress: () => navigation?.navigate("UploadScreen"),
-          },
-        ]);
-      } else {
-        Alert.alert("Erro", data.error || "Falha ao autenticar");
+      if (!response.ok) {
+        return Alert.alert("Erro", data?.error || "Falha ao autenticar");
       }
-    } catch (err) {
-      Alert.alert("Erro", "Não foi possível conectar ao servidor");
+
+      if (!data?.token) {
+        return Alert.alert("Erro", "Token não recebido");
+      }
+
+      const user = data?.user ?? {};
+
+      const nome =
+        user?.name || (user?.email ? user.email.split("@")[0] : "Usuário");
+
+      router.push({
+        pathname: "/uploadScreen",
+        params: { nome },
+      });
+    } catch (error) {
+      console.log("ERRO LOGIN:", error);
+      Alert.alert("Erro de conexão", "Verifique o backend ou sua rede");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      
-      
-      
-        <Image
-          source={require("../assets/images/logoprincipal.png")}
-          style={styles.logo}
-        />
-      
+      <Image
+        source={require("../assets/images/logoprincipal.png")}
+        style={styles.logo}
+      />
 
       <View style={styles.card}>
         <Text style={styles.title}>Bem-vindo</Text>
         <Text style={styles.subtitle}>Assinador Online</Text>
 
-        {/* Email */}
-        <View style={[styles.inputContainer, styles.inputFocus, ]}>
+        <View style={styles.inputContainer}>
           <TextInput
             placeholder="Email"
             placeholderTextColor="#777"
@@ -73,13 +87,10 @@ export default function Login({ navigation }) {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
-            autoCorrect={false}
-            
           />
         </View>
 
-        {/* Senha */}
-        <View style={[styles.inputContainer, styles.inputFocus,]}>
+        <View style={styles.inputContainer}>
           <TextInput
             placeholder="Senha"
             placeholderTextColor="#777"
@@ -87,8 +98,6 @@ export default function Login({ navigation }) {
             style={styles.inputField}
             value={senha}
             onChangeText={setSenha}
-            
-            
           />
 
           <TouchableOpacity
@@ -100,16 +109,19 @@ export default function Login({ navigation }) {
               size={24}
               color="#777"
             />
-          </TouchableOpacity> 
+          </TouchableOpacity>
         </View>
 
-        {/* Botão */}
         <TouchableOpacity
-          style={styles.button}
-          activeOpacity={0.8}
+          style={[styles.button, loading && { opacity: 0.7 }]}
           onPress={handleLogin}
+          disabled={loading}
         >
-          <Text style={styles.buttonText}>Entrar</Text>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Entrar</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
