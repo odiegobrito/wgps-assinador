@@ -1,84 +1,110 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#010101",
-    padding: 20,
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "#F7F6F2",
+    padding: 24,
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
   },
 
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 30,
+  contractTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 12,
+    color: "#1A1A2E",
   },
 
-  warningText: {
-    color: "#ff5555",
-    fontSize: 16,
-    textAlign: "center",
+  signatureWrapper: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "#E0DED8",
+    backgroundColor: "#fff",
+    overflow: "hidden",
     marginBottom: 20,
   },
 
-  backButton: {
-    backgroundColor: "#333",
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 12,
+  signatureHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0EFE9",
   },
 
-  backButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+  signatureLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#AAA",
+    letterSpacing: 2,
   },
 
-  fileCard: {
-    backgroundColor: "#1a1a1a",
-    padding: 20,
-    borderRadius: 16,
-    width: "100%",
-    marginBottom: 30,
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 5,
+  clearText: {
+    color: "#E74C3C",
+    fontWeight: "600",
   },
 
-  fileLabel: {
-    color: "#aaa",
-    fontSize: 14,
-    marginTop: 8,
+  canvasContainer: {
+    flex: 1,
+    minHeight: 200,
   },
 
-  fileName: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 4,
+  signatureCanvas: {
+    flex: 1,
   },
 
-  fileSize: {
-    color: "#fff",
-    fontSize: 14,
-    marginTop: 2,
+  signatureFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#F0EFE9",
   },
 
-  signButton: {
-    backgroundColor: "#2662c9",
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#D1CFC7",
+  },
+
+  statusDotActive: {
+    backgroundColor: "#2ECC71",
+  },
+
+  statusText: {
+    fontSize: 12,
+    color: "#999",
+  },
+
+  confirmButton: {
     paddingVertical: 16,
-    paddingHorizontal: 40,
-    borderRadius: 12,
+    borderRadius: 14,
+    alignItems: "center",
   },
 
-  signButtonText: {
-    color: "#fff",
+  confirmButtonActive: {
+    backgroundColor: "#1A1A2E",
+  },
+
+  confirmButtonDisabled: {
+    backgroundColor: "#BDBDBD",
+  },
+
+  confirmButtonText: {
     fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: "700",
+    color: "#fff",
+  },
+
+  pdfContainer: {
+    flex: 1,
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E0DED8",
   },
 });
