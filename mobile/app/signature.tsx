@@ -1,15 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    Dimensions,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
-import Pdf from "react-native-pdf";
+import React, { useRef, useState } from "react";
+import { Alert, Animated, Text, TouchableOpacity, View } from "react-native";
 import SignatureCanvas from "react-native-signature-canvas";
 import styles from "./styles/signatureScreen.style";
 import { addSignatureToPdf } from "./util/pdfUtils";
@@ -21,20 +12,14 @@ export default function SignatureScreen() {
     contractName?: string;
     contractUri?: string;
   }>();
+
   const { nome, contractName, contractUri } = params;
 
   const signatureRef = useRef<SignatureCanvas>(null);
-  const [pdfUri, setPdfUri] = useState<string | null>(null);
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
-
-  useEffect(() => {
-    if (contractUri) {
-      setPdfUri(decodeURIComponent(contractUri));
-    }
-  }, [contractUri]);
 
   const handleSignature = (sig: string) => {
     setSignatureData(sig);
@@ -53,25 +38,39 @@ export default function SignatureScreen() {
   };
 
   const handleFinish = async () => {
-    if (!signatureData || !pdfUri) {
-      Alert.alert("Atenção", "Assine o contrato antes de finalizar.");
+    if (!signatureData) {
+      Alert.alert("Atenção", "Assine antes de finalizar.");
       return;
     }
 
     setLoading(true);
+
     try {
-      const signedPdf = await addSignatureToPdf(pdfUri, signatureData);
+      let signedPdf = null;
+
+      // Só assina PDF se existir
+      if (contractUri) {
+        signedPdf = await addSignatureToPdf(
+          decodeURIComponent(contractUri),
+          signatureData,
+        );
+      }
+
       setLoading(false);
+
       Alert.alert(
-        "Contrato Assinado!",
-        "Sua assinatura foi aplicada com sucesso.",
+        "Assinatura concluída!",
+        "Assinatura registrada com sucesso.",
         [
           {
             text: "OK",
             onPress: () =>
               router.push({
                 pathname: "/success",
-                params: { nome, signedPdfUri: signedPdf },
+                params: {
+                  nome,
+                  signedPdfUri: signedPdf || "",
+                },
               }),
           },
         ],
@@ -79,7 +78,7 @@ export default function SignatureScreen() {
     } catch (err) {
       console.error(err);
       setLoading(false);
-      Alert.alert("Erro", "Não foi possível assinar o contrato.");
+      Alert.alert("Erro", "Não foi possível finalizar.");
     }
   };
 
@@ -98,36 +97,16 @@ export default function SignatureScreen() {
     body, html { background-color: #FFFFFF; }
   `;
 
-  if (!pdfUri) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#1A1A2E" />
-        <Text style={{ marginTop: 10 }}>CARREGANDO CONTRATO</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <Text style={styles.contractTitle}>{contractName || "Contrato.pdf"}</Text>
+      {/* Título */}
+      <Text style={styles.contractTitle}>{contractName || "Assinatura"}</Text>
 
-      {/* PDF Preview */}
-      <View style={styles.pdfContainer}>
-        <Pdf
-          source={{ uri: pdfUri }}
-          style={{ flex: 1, width: Dimensions.get("window").width }}
-          onError={(e) => console.log("PDF error:", e)}
-          onLoadComplete={(numberOfPages) =>
-            console.log(`PDF carregado, páginas: ${numberOfPages}`)
-          }
-        />
-      </View>
-
-      {/* Signature Box */}
+      {/* Área de assinatura */}
       <View style={styles.signatureWrapper}>
         <View style={styles.signatureHeader}>
           <Text style={styles.signatureLabel}>ASSINE AQUI</Text>
+
           <TouchableOpacity onPress={handleClear}>
             <Text style={styles.clearText}>Limpar</Text>
           </TouchableOpacity>
@@ -144,8 +123,7 @@ export default function SignatureScreen() {
             confirmText="Salvar"
             webStyle={webStyle}
             backgroundColor="white"
-            penColor="#1A1A2E"
-            dotSize={2}
+            penColor="#000"
             minWidth={2}
             maxWidth={4}
             style={styles.signatureCanvas}
@@ -157,12 +135,12 @@ export default function SignatureScreen() {
             style={[styles.statusDot, hasDrawn && styles.statusDotActive]}
           />
           <Text style={styles.statusText}>
-            {hasDrawn ? "Assinatura detectada" : "Aguardando assinatura..."}
+            {hasDrawn ? "Assinatura capturada" : "Aguardando assinatura..."}
           </Text>
         </View>
       </View>
 
-      {/* Confirm Button */}
+      {/* Botão */}
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <TouchableOpacity
           style={[
@@ -177,7 +155,7 @@ export default function SignatureScreen() {
           disabled={loading}
         >
           <Text style={styles.confirmButtonText}>
-            {loading ? "Aplicando assinatura..." : "Finalizar Contrato →"}
+            {loading ? "Salvando..." : "Finalizar Assinatura →"}
           </Text>
         </TouchableOpacity>
       </Animated.View>
