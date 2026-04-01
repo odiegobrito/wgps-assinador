@@ -6,40 +6,26 @@ import styles from "./styles/signatureScreen.style";
 import { addSignatureToPdf } from "./util/pdfUtils";
 
 export default function SignatureScreen() {
-  const router = useRouter();
   const params = useLocalSearchParams<{
     nome?: string;
     contractName?: string;
     contractUri?: string;
   }>();
 
-  const { nome, contractName, contractUri } = params;
+  const { contractName, contractUri } = params;
 
   const signatureRef = useRef<SignatureCanvas>(null);
-  const [signatureData, setSignatureData] = useState<string | null>(null);
+
   const [hasDrawn, setHasDrawn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
+  const router = useRouter();
 
-  const handleSignature = (sig: string) => {
-    setSignatureData(sig);
-    setHasDrawn(true);
-  };
+  const handleSignature = async (sig: string) => {
+    console.log("Assinatura recebida");
 
-  const handleEmpty = () => {
-    setHasDrawn(false);
-    setSignatureData(null);
-  };
-
-  const handleClear = () => {
-    signatureRef.current?.clearSignature();
-    setSignatureData(null);
-    setHasDrawn(false);
-  };
-
-  const handleFinish = async () => {
-    if (!signatureData) {
-      Alert.alert("Atenção", "Assine antes de finalizar.");
+    if (!sig) {
+      Alert.alert("Erro", "Assinatura inválida.");
       return;
     }
 
@@ -48,38 +34,31 @@ export default function SignatureScreen() {
     try {
       let signedPdf = null;
 
-      // Só assina PDF se existir
       if (contractUri) {
         signedPdf = await addSignatureToPdf(
           decodeURIComponent(contractUri),
-          signatureData,
+          sig,
         );
       }
 
       setLoading(false);
 
-      Alert.alert(
-        "Assinatura concluída!",
-        "Assinatura registrada com sucesso.",
-        [
-          {
-            text: "OK",
-            onPress: () =>
-              router.push({
-                pathname: "/success",
-                params: {
-                  nome,
-                  signedPdfUri: signedPdf || "",
-                },
-              }),
-          },
-        ],
-      );
+      router.replace({
+        pathname: "/receivedScreen",
+        params: {
+          signedPdfUri: signedPdf || "",
+          contractName: contractName || "Contrato.pdf",
+        },
+      });
     } catch (err) {
       console.error(err);
       setLoading(false);
       Alert.alert("Erro", "Não foi possível finalizar.");
     }
+  };
+  const handleClear = () => {
+    signatureRef.current?.clearSignature();
+    setHasDrawn(false);
   };
 
   const animatePress = (toValue: number) => {
@@ -116,8 +95,9 @@ export default function SignatureScreen() {
           <SignatureCanvas
             ref={signatureRef}
             onOK={handleSignature}
-            onEmpty={handleEmpty}
             onBegin={() => setHasDrawn(true)}
+            onEmpty={() => setHasDrawn(false)} // 👈 ESSENCIAL
+            autoClear={false}
             descriptionText=""
             clearText="Limpar"
             confirmText="Salvar"
@@ -149,10 +129,18 @@ export default function SignatureScreen() {
               ? styles.confirmButtonActive
               : styles.confirmButtonDisabled,
           ]}
-          onPress={handleFinish}
+          onPress={() => {
+            if (!hasDrawn) {
+              Alert.alert("Atenção", "Assine antes de finalizar.");
+              return;
+            }
+
+            console.log("Lendo assinatura...");
+            signatureRef.current?.readSignature();
+          }}
           onPressIn={() => animatePress(0.96)}
           onPressOut={() => animatePress(1)}
-          disabled={loading}
+          disabled={!hasDrawn || loading}
         >
           <Text style={styles.confirmButtonText}>
             {loading ? "Salvando..." : "Finalizar Assinatura →"}
