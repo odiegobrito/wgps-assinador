@@ -2,12 +2,12 @@ import * as DocumentPicker from "expo-document-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef } from "react";
 import {
-    Alert,
-    Animated,
-    Image,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Animated,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useContract } from "./context/ContractContext";
 import styles from "./styles/uploadScreen.style";
@@ -57,9 +57,14 @@ export default function UploadScreen() {
       return;
     }
 
-    router.push("/signature");
+    router.push({
+      pathname: "/signature",
+      params: {
+        contractName: contractFile.name,
+        contractUri: encodeURIComponent(contractFile.uri), // ✅ encode obrigatório
+      },
+    });
   };
-
   const animatePress = (toValue: number) => {
     Animated.spring(scaleAnim, {
       toValue,

@@ -113,6 +113,15 @@ export default function Login() {
         </View>
 
         <TouchableOpacity
+          style={styles.forgotPasswordContainer}
+          onPress={() => {
+            Alert.alert("Recuperação de senha", "Funcionalidade em breve");
+          }}
+        >
+          <Text style={styles.forgotPasswordText}>Esqueci minha senha</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={[styles.button, loading && { opacity: 0.7 }]}
           onPress={handleLogin}
           disabled={loading}

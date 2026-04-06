@@ -87,4 +87,16 @@ export default StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
+
+  forgotPasswordContainer: {
+    alignSelf: "flex-end",
+    marginTop: 6,
+    marginBottom: 16,
+  },
+
+  forgotPasswordText: {
+    color: "#4A90E2",
+    fontSize: 13,
+    fontWeight: "500",
+  },
 });

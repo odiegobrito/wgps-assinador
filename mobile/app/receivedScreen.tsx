@@ -1,48 +1,129 @@
-import * as Linking from "expo-linking";
+import * as FileSystem from "expo-file-system/legacy";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import * as Sharing from "expo-sharing";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import styles from "./styles/signatureScreen.style";
+
+type ReceivedScreenParams = {
+  signedPdfUri?: string;
+  contractName?: string;
+};
 
 export default function ReceivedScreen() {
   const router = useRouter();
+  const { signedPdfUri, contractName } =
+    useLocalSearchParams<ReceivedScreenParams>();
 
-  const params = useLocalSearchParams<{
-    signedPdfUri?: string;
-    contractName?: string;
-  }>();
+  const [fileExists, setFileExists] = useState<boolean | null>(null); // null = verificando
+  const [sharing, setSharing] = useState(false);
 
-  const { signedPdfUri, contractName } = params;
+  useEffect(() => {
+    const checkFile = async () => {
+      console.log("📂 signedPdfUri recebido:", signedPdfUri); // 🔍
 
-  const handleDownload = async () => {
-    if (!signedPdfUri) {
-      Alert.alert("Erro", "Arquivo não encontrado.");
+      if (!signedPdfUri) {
+        setFileExists(false);
+        return;
+      }
+
+      try {
+        const info = await FileSystem.getInfoAsync(signedPdfUri);
+        console.log("📋 info do arquivo:", info); // 🔍
+        setFileExists(info.exists);
+      } catch (err) {
+        console.error("Erro ao verificar arquivo:", err);
+        setFileExists(false);
+      }
+    };
+
+    checkFile();
+  }, [signedPdfUri]);
+
+  const handleShare = async () => {
+    if (!signedPdfUri || !fileExists) {
+      Alert.alert("Erro", "Arquivo não encontrado no dispositivo.");
       return;
     }
 
-    try {
-      await Linking.openURL(signedPdfUri);
-    } catch {
-      Alert.alert("Erro", "Não foi possível abrir o PDF.");
+    const isSharingAvailable = await Sharing.isAvailableAsync();
+    if (!isSharingAvailable) {
+      Alert.alert(
+        "Indisponível",
+        "Compartilhamento não suportado neste dispositivo.",
+      );
+      return;
     }
+
+    setSharing(true);
+    try {
+      await Sharing.shareAsync(signedPdfUri, {
+        mimeType: "application/pdf",
+        dialogTitle: contractName ?? "Contrato Assinado",
+        UTI: "com.adobe.pdf", // necessário para iOS
+      });
+    } catch (err) {
+      console.error("Erro ao compartilhar PDF:", err);
+      Alert.alert("Erro", "Não foi possível compartilhar o PDF.");
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const renderStatus = () => {
+    if (fileExists === null) {
+      return <ActivityIndicator color="#fff" style={{ marginVertical: 12 }} />;
+    }
+
+    if (!fileExists) {
+      return (
+        <Text
+          style={{ color: "#ff6b6b", marginBottom: 16, textAlign: "center" }}
+        >
+          ⚠️ Arquivo não encontrado. Tente assinar novamente.
+        </Text>
+      );
+    }
+
+    return null;
   };
 
   return (
     <View style={styles.container}>
-      {/* Título */}
       <Text style={styles.contractTitle}>CONTRATO ASSINADO ✅</Text>
 
-      {/* Nome do contrato */}
       <Text style={{ color: "#aaa", marginBottom: 30 }}>
-        {contractName || "Contrato.pdf"}
+        {contractName ?? "Contrato.pdf"}
       </Text>
 
-      {/* Botão download */}
-      <TouchableOpacity style={styles.confirmButton} onPress={handleDownload}>
-        <Text style={styles.confirmButtonText}>📥 Baixar PDF Assinado</Text>
+      {renderStatus()}
+
+      {/* ✅ Botão só ativo se arquivo existe */}
+      <TouchableOpacity
+        style={[
+          styles.confirmButton,
+          fileExists
+            ? styles.confirmButtonActive
+            : styles.confirmButtonDisabled,
+        ]}
+        onPress={handleShare}
+        disabled={!fileExists || sharing}
+      >
+        {sharing ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.confirmButtonText}>
+            📤 Compartilhar PDF Assinado
+          </Text>
+        )}
       </TouchableOpacity>
 
-      {/* Voltar (opcional) */}
       <TouchableOpacity
         style={{ marginTop: 20 }}
         onPress={() => router.replace("/")}

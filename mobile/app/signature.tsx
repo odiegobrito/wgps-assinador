@@ -1,64 +1,86 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
-import { Alert, Animated, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import SignatureCanvas from "react-native-signature-canvas";
 import styles from "./styles/signatureScreen.style";
 import { addSignatureToPdf } from "./util/pdfUtils";
 
-export default function SignatureScreen() {
-  const params = useLocalSearchParams<{
-    nome?: string;
-    contractName?: string;
-    contractUri?: string;
-  }>();
+const SIGNATURE_WEB_STYLE = `
+  .m-signature-pad { box-shadow: none; border: none; }
+  .m-signature-pad--body { border: none; }
+  .m-signature-pad--footer { display: none; }
+  body, html { background-color: #FFFFFF; }
+`;
 
-  const { contractName, contractUri } = params;
+type SignatureScreenParams = {
+  nome?: string;
+  contractName?: string;
+  contractUri?: string;
+};
+
+export default function SignatureScreen() {
+  const { contractName, contractUri } =
+    useLocalSearchParams<SignatureScreenParams>();
 
   const signatureRef = useRef<SignatureCanvas>(null);
+  const router = useRouter();
 
   const [hasDrawn, setHasDrawn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
-  const router = useRouter();
 
   const handleSignature = async (sig: string) => {
-    console.log("Assinatura recebida");
+    console.log("sig length:", sig?.length);
+    console.log("contractUri:", contractUri);
+    console.log("contractName:", contractName);
 
-    if (!sig) {
-      Alert.alert("Erro", "Assinatura inválida.");
+    if (!sig || !contractUri) {
+      Alert.alert("Erro", "Assinatura ou contrato inválido.");
       return;
     }
 
     setLoading(true);
 
     try {
-      let signedPdf = null;
+      const base64Signature = sig.replace("data:image/png;base64,", "");
+      const decodedUri = decodeURIComponent(contractUri);
 
-      if (contractUri) {
-        signedPdf = await addSignatureToPdf(
-          decodeURIComponent(contractUri),
-          sig,
-        );
-      }
-
-      setLoading(false);
+      const signedPdfUri = await addSignatureToPdf(decodedUri, base64Signature);
 
       router.replace({
         pathname: "/receivedScreen",
         params: {
-          signedPdfUri: signedPdf || "",
-          contractName: contractName || "Contrato.pdf",
+          signedPdfUri,
+          contractName: contractName ?? "Contrato.pdf",
         },
       });
     } catch (err) {
-      console.error(err);
+      const message = err instanceof Error ? err.message : "Erro desconhecido.";
+      console.error("Erro ao salvar PDF:", err);
+      Alert.alert("Erro ao salvar", message);
+    } finally {
       setLoading(false);
-      Alert.alert("Erro", "Não foi possível finalizar.");
     }
   };
+
   const handleClear = () => {
     signatureRef.current?.clearSignature();
     setHasDrawn(false);
+  };
+
+  const handleConfirm = () => {
+    if (!hasDrawn) {
+      Alert.alert("Atenção", "Assine antes de finalizar.");
+      return;
+    }
+    signatureRef.current?.readSignature();
   };
 
   const animatePress = (toValue: number) => {
@@ -69,24 +91,14 @@ export default function SignatureScreen() {
     }).start();
   };
 
-  const webStyle = `
-    .m-signature-pad { box-shadow: none; border: none; }
-    .m-signature-pad--body { border: none; }
-    .m-signature-pad--footer { display: none; }
-    body, html { background-color: #FFFFFF; }
-  `;
-
   return (
     <View style={styles.container}>
-      {/* Título */}
-      <Text style={styles.contractTitle}>{contractName || "Assinatura"}</Text>
+      <Text style={styles.contractTitle}>{contractName ?? "Assinatura"}</Text>
 
-      {/* Área de assinatura */}
       <View style={styles.signatureWrapper}>
         <View style={styles.signatureHeader}>
           <Text style={styles.signatureLabel}>ASSINE AQUI</Text>
-
-          <TouchableOpacity onPress={handleClear}>
+          <TouchableOpacity onPress={handleClear} disabled={loading}>
             <Text style={styles.clearText}>Limpar</Text>
           </TouchableOpacity>
         </View>
@@ -96,12 +108,15 @@ export default function SignatureScreen() {
             ref={signatureRef}
             onOK={handleSignature}
             onBegin={() => setHasDrawn(true)}
-            onEmpty={() => setHasDrawn(false)} // 👈 ESSENCIAL
+            onEmpty={() => {
+              setHasDrawn(false);
+              console.log("⚠️ Canvas reportou vazio ao tentar ler");
+            }}
             autoClear={false}
             descriptionText=""
             clearText="Limpar"
             confirmText="Salvar"
-            webStyle={webStyle}
+            webStyle={SIGNATURE_WEB_STYLE}
             backgroundColor="white"
             penColor="#000"
             minWidth={2}
@@ -120,31 +135,24 @@ export default function SignatureScreen() {
         </View>
       </View>
 
-      {/* Botão */}
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <TouchableOpacity
           style={[
             styles.confirmButton,
-            hasDrawn
+            hasDrawn && !loading
               ? styles.confirmButtonActive
               : styles.confirmButtonDisabled,
           ]}
-          onPress={() => {
-            if (!hasDrawn) {
-              Alert.alert("Atenção", "Assine antes de finalizar.");
-              return;
-            }
-
-            console.log("Lendo assinatura...");
-            signatureRef.current?.readSignature();
-          }}
+          onPress={handleConfirm}
           onPressIn={() => animatePress(0.96)}
           onPressOut={() => animatePress(1)}
           disabled={!hasDrawn || loading}
         >
-          <Text style={styles.confirmButtonText}>
-            {loading ? "Salvando..." : "Finalizar Assinatura →"}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.confirmButtonText}>Finalizar Assinatura →</Text>
+          )}
         </TouchableOpacity>
       </Animated.View>
     </View>
