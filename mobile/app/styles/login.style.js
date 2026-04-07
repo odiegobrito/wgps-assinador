@@ -1,36 +1,29 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#010101",
-    zIndex: 0,
-  },
+  
 
   logo: {
     width: 200,
     height: 200,
     alignSelf: "center",
-    marginBottom: 25,
+    marginBottom: 20,
     resizeMode: "contain",
   },
 
   card: {
-    backgroundColor: "#010101",
     padding: 22,
-    borderRadius: 20,
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    shadowOffset: { width: 0, height: 10 },
-    zIndex: 1,
+  borderRadius: 20,
+
+  backgroundColor: "rgba(255,255,255,0.05)",
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.1)",
+
+  overflow: "hidden",
   },
 
   title: {
-    fontSize: 26,
+    fontSize: 28,
     marginBottom: 5,
     textAlign: "center",
     color: "#fff",
@@ -38,8 +31,8 @@ export default StyleSheet.create({
   },
 
   subtitle: {
-    fontSize: 14,
-    marginBottom: 20,
+    fontSize: 13,
+    marginBottom: 25,
     textAlign: "center",
     color: "#aaa",
   },
@@ -47,12 +40,12 @@ export default StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#1f1f1f",
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#2a2a2a",
     borderRadius: 12,
     marginBottom: 15,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
   },
 
   inputField: {
@@ -79,6 +72,10 @@ export default StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginTop: 10,
+    shadowColor: "#2662c9",
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 6,
   },
 
   buttonText: {
@@ -95,7 +92,7 @@ export default StyleSheet.create({
   },
 
   forgotPasswordText: {
-    color: "#4A90E2",
+    color: "#2662c9",
     fontSize: 13,
     fontWeight: "500",
   },

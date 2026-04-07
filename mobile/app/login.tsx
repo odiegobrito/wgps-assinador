@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -8,10 +8,13 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Animated,
 } from "react-native";
 
 import { useRouter } from "expo-router";
 import styles from "./styles/login.style";
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 
 const BACKEND_URL = "http://192.168.1.79:3000";
 
@@ -22,6 +25,61 @@ export default function Login() {
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [loading, setLoading] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+ const fadeAnim = useRef(new Animated.Value(0)).current;
+const translateY = useRef(new Animated.Value(30)).current;
+const scaleBtn = useRef(new Animated.Value(1)).current;
+const [erroEmail, setErroEmail] = useState(false);
+
+const validarEmail = (email) => {
+  return /\S+@\S+\.\S+/.test(email);
+};
+
+const handlePressIn = () => {
+  Animated.spring(scaleBtn, {
+    toValue: 0.95,
+    useNativeDriver: true,
+  }).start();
+};
+
+const handlePressOut = () => {
+  Animated.spring(scaleBtn, {
+    toValue: 1,
+    useNativeDriver: true,
+  }).start();
+};
+
+useEffect(() => {
+  Animated.parallel([
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }),
+    Animated.timing(translateY, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }),
+  ]).start();
+}, []);
+
+useEffect(() => {
+  Animated.loop(
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.05,
+        duration: 1200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 1200,
+        useNativeDriver: true,
+      }),
+    ])
+  ).start();
+}, []);
 
   const handleLogin = async () => {
     if (!email.trim() || !senha.trim()) {
@@ -29,6 +87,13 @@ export default function Login() {
     }
 
     setLoading(true);
+
+    if (!validarEmail(email)) {
+        setErroEmail(true);
+        return;
+      } else {
+        setErroEmail(false);
+      }
 
     try {
       const response = await fetch(`${BACKEND_URL}/login`, {
@@ -38,6 +103,7 @@ export default function Login() {
           email: email.trim().toLowerCase(),
           password: senha,
         }),
+        
       });
 
       const data = await response.json().catch(() => ({}));
@@ -68,13 +134,24 @@ export default function Login() {
   };
 
   return (
-    <View style={styles.container}>
-      <Image
-        source={require("../assets/images/logoprincipal.png")}
-        style={styles.logo}
-      />
+    <LinearGradient
+  colors={["#0d0d0d", "#111827", "#0d0d0d"]}
+  style={{ flex: 1, justifyContent: "center", padding: 20 }}
+>
+  
 
-      <View style={styles.card}>
+      <Animated.Image
+  source={require("../assets/images/logoprincipal.png")}
+  style={[
+    styles.logo,
+    {
+      opacity: fadeAnim,
+      transform: [{ translateY }],
+    },
+  ]}
+/>
+
+      <BlurView intensity={40} tint="dark" style={styles.card}>
         <Text style={styles.title}>Bem-vindo</Text>
         <Text style={styles.subtitle}>Assinador Online</Text>
 
@@ -89,6 +166,11 @@ export default function Login() {
             autoCapitalize="none"
           />
         </View>
+        {erroEmail && (
+  <Text style={{ color: "#ff4d4d", fontSize: 12, marginTop: -10, marginBottom: 10, marginLeft: 10}}>
+    Email inválido
+  </Text>
+)}
 
         <View style={styles.inputContainer}>
           <TextInput
@@ -121,18 +203,26 @@ export default function Login() {
           <Text style={styles.forgotPasswordText}>Esqueci minha senha</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, loading && { opacity: 0.7 }]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Entrar</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
+        <Animated.View style={{ transform: [{ scale: scaleBtn }] }}>
+            <TouchableOpacity
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <LinearGradient
+                colors={["#2662c9", "#4A90E2"]}
+                style={styles.button}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Entrar</Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+      </BlurView>
+    </LinearGradient>
   );
 }
