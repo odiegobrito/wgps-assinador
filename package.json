@@ -1,5 +1,30 @@
 {
   "dependencies": {
-    "buffer": "^6.0.3"
-  }
+    "@types/react": "~19.2.10",
+    "buffer": "^6.0.3",
+    "concurrently": "^9.2.1",
+    "expo": "^55.0.12",
+    "typescript": "~5.9.2"
+  },
+  "name": "wgps-assinador",
+  "version": "1.0.0",
+  "description": "NPM INSTALL\r NPX START EXPO - TESTE",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run mobile\"",
+    "backend": "npm --prefix backend start",
+    "mobile": "cd mobile && npx expo start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/odiegobrito/wgps-assinador.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/odiegobrito/wgps-assinador/issues"
+  },
+  "homepage": "https://github.com/odiegobrito/wgps-assinador#readme"
 }
